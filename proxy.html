@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Google Sheets Proxy</title>
+  <script>
+    async function fetchSheetData(sheetId, range, callback) {
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&range=${range}`;
+      const response = await fetch(url, { mode: 'no-cors' });
+
+      response.text().then((text) => {
+        const jsonData = JSON.parse(text.substring(47, text.length - 2));
+        const rows = jsonData.table.rows;
+        const data = rows.map(row => row.c.map(cell => cell && cell.v));
+        window[callback](data);
+      }).catch(error => {
+        console.error("Error fetching data:", error);
+      });
+    }
+  </script>
+</head>
+<body>
+  <h3>Google Sheets Proxy Server</h3>
+  <p>This is a simple proxy for fetching data from Google Sheets.</p>
+</body>
+</html>
