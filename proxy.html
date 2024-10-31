@@ -4,18 +4,49 @@
   <meta charset="UTF-8">
   <title>Google Sheets Proxy</title>
   <script>
+    // Function to fetch data from Google Sheets and call the provided callback
     async function fetchSheetData(sheetId, range, callback) {
-      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&range=${range}`;
-      const response = await fetch(url, { mode: 'no-cors' });
+      console.log("Starting fetchSheetData with sheetId:", sheetId, "range:", range, "callback:", callback);
 
-      response.text().then((text) => {
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&range=${range}`;
+      console.log("Constructed Google Sheets URL:", url);
+
+      try {
+        const response = await fetch(url, { mode: 'no-cors' });
+        console.log("Fetch response:", response);
+
+        // Since we use no-cors, this will be an opaque response
+        const text = await response.text();
+        console.log("Response text:", text);
+
+        // Parse JSON data, removing wrapper from Google Sheets API
         const jsonData = JSON.parse(text.substring(47, text.length - 2));
+        console.log("Parsed JSON data:", jsonData);
+
+        // Extract rows and format data
         const rows = jsonData.table.rows;
         const data = rows.map(row => row.c.map(cell => cell && cell.v));
+        console.log("Extracted data:", data);
+
+        // Call the callback with extracted data
         window[callback](data);
-      }).catch(error => {
-        console.error("Error fetching data:", error);
-      });
+      } catch (error) {
+        console.error("Error fetching Google Sheets data:", error);
+      }
+    }
+
+    // Extract parameters from URL and call fetchSheetData
+    const urlParams = new URLSearchParams(window.location.search);
+    const sheetId = urlParams.get("sheetId");
+    const range = urlParams.get("range");
+    const callback = urlParams.get("callback");
+
+    console.log("Extracted URL parameters:", { sheetId, range, callback });
+
+    if (sheetId && range && callback) {
+      fetchSheetData(sheetId, range, callback);
+    } else {
+      console.error("Missing parameters in URL.");
     }
   </script>
 </head>
